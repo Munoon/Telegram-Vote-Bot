@@ -60,22 +60,25 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     public void newVote(Message message) {
-        if (phone.containsKey(message.getFrom().getUserName())) {     // message.getText().contains("1") &&
-            if (phone.get(message.getFrom().getUserName()).equals(false)) {
-                phone.replace(message.getFrom().getUserName(), false, true);
-                players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
-                System.out.println("A voice was given to the player " + message.getText() + " from the user " + message.getFrom().getUserName());
-                getStatus();
-                sndMsg(message, "You voted for the player " + message.getText());
+        try {
+            if (phone.containsKey(message.getFrom().getUserName())) {     // message.getText().contains("1") &&
+                if (phone.get(message.getFrom().getUserName()).equals(false)) {
+                    phone.replace(message.getFrom().getUserName(), false, true);
+                    players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
+                    System.out.println("A voice was given to the player " + message.getText() + " from the user " + message.getFrom().getUserName());
+                    getStatus();
+                    sndMsg(message, "You voted for the player " + message.getText());
+                } else {
+                    System.out.println("User " + message.getFrom().getUserName() + " trying to vote twice!");
+                    sndMsg(message, "You have already voted!");
+                }
+            } else {
+                System.out.println("Unknown user found: " + message.getFrom().getUserName());
+                sndMsg(message, "You are not registered to vote!");
             }
-            else {
-                System.out.println("User " + message.getFrom().getUserName() + " trying to vote twice!");
-                sndMsg(message, "You have already voted!");
-            }
-        }
-        else {
-            System.out.println("Unknown user found: " + message.getFrom().getUserName());
-            sndMsg(message, "You are not registered to vote!");
+        } catch (NumberFormatException e) {
+            System.out.println(message.getFrom().getUserName() + " enter invalid format");
+            sndMsg(message, "You have entered the wrong format.");
         }
     }
 
