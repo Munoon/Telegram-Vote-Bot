@@ -6,7 +6,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,15 +14,27 @@ import java.util.Map;
 public class TelegramBot extends TelegramLongPollingBot {
     static List<Integer> players = new ArrayList<>();
     static Map<String, Boolean> phone = new HashMap<>(); //голосовал?
+    static String BotToken = "";
+    static String BotUsername = "";
 
     public static void main(String[] args) {
+        /*
+        WRITE YOUR SETTINGS HERE.
+
+        FIRSTLY YOU NEED TO SEND /start TO @BotFather
+        THEN TYPE /newbot AND FOLLOW THE INSTRUCTION
+        AT THE END YOU WILL GET TOKEN
+         */
+        BotToken = "WRITE BOT TOKEN HERE";
+        BotUsername = "WRITE BOT USERNAME HERE";
+
         //ADD YOUR PLAYERS HERE
-        players.add(0); //игрок 1
-        players.add(0); //игрок 2
-        players.add(0); //игрок 3
+        players.add(0); //player 0
+        players.add(0); //player 1
+        players.add(0); //player 2
 
         //ADD YOUR VOTERS HERE
-        phone.put("munoon", false);
+        phone.put("username", false);
 
         ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
@@ -40,7 +51,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             if (message.getText().equals("/start")) {
-                sndMsg(message, "Привет! Я бот голосования. Напиши число участника за которого хочешь проголосовать!");
+                sndMsg(message, "Hi! I'm voting bot. Write the number of the member you want to vote for!");
             }
             else {
                 newVote(message);
@@ -53,18 +64,18 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (phone.get(message.getFrom().getUserName()).equals(false)) {
                 phone.replace(message.getFrom().getUserName(), false, true);
                 players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
-                System.out.println("Был отдан голос игроку " + message.getText() + " от зрителя " + message.getFrom().getUserName());
+                System.out.println("A voice was given to the player " + message.getText() + " from the user " + message.getFrom().getUserName());
                 getStatus();
-                sndMsg(message, "Вы проголосовали за игрока " + message.getText());
+                sndMsg(message, "You voted for the player " + message.getText());
             }
             else {
-                System.out.println("Зритель " + message.getFrom().getUserName() + " пытаеться проголосвать два раза!");
-                sndMsg(message, "Вы уже голосовали!");
+                System.out.println("User " + message.getFrom().getUserName() + " trying to vote twice!");
+                sndMsg(message, "You have already voted!");
             }
         }
         else {
-            System.out.println("Найден неизвестный зритель: " + message.getFrom().getUserName());
-            sndMsg(message, "Вы не зарегестрированы в голосовании!");
+            System.out.println("Unknown user found: " + message.getFrom().getUserName());
+            sndMsg(message, "You are not registered to vote!");
         }
     }
 
@@ -92,11 +103,11 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "Telegram Bot By Munoon";
+        return BotUsername;
     }
 
     @Override
     public String getBotToken() {
-        return "783977786:AAE0kzDPubTe-DaJ2I79gH-3IbscgXYOWII";
+        return BotToken;
     }
 }
