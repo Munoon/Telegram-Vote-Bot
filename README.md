@@ -19,3 +19,4 @@ This is telegram bot that counts votes. It accepts votes only from certain membe
 2. Make normal settings.
 3. Add live voting on website.
 4. Make voting by stickers.
+5. Added loging.
