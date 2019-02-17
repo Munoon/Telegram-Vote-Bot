@@ -63,11 +63,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             if (phone.containsKey(message.getFrom().getUserName())) {     // message.getText().contains("1") &&
                 if (phone.get(message.getFrom().getUserName()).equals(false)) {
-                    phone.replace(message.getFrom().getUserName(), false, true);
                     players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
                     System.out.println("A voice was given to the player " + message.getText() + " from the user " + message.getFrom().getUserName());
                     getStatus();
                     sndMsg(message, "You voted for the player " + message.getText());
+                    phone.replace(message.getFrom().getUserName(), false, true);
                 } else {
                     System.out.println("User " + message.getFrom().getUserName() + " trying to vote twice!");
                     sndMsg(message, "You have already voted!");
@@ -79,6 +79,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (NumberFormatException e) {
             System.out.println(message.getFrom().getUserName() + " enter invalid format");
             sndMsg(message, "You have entered the wrong format.");
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println(message.getFrom().getUserName() + " enter wrong number");
+            sndMsg(message, "You have entered the wrong number.");
         }
     }
 
