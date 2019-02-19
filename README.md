@@ -1,5 +1,5 @@
 # Telegram Vote Bot
-This is telegram bot that counts votes. It accepts votes only from certain members and prohibits re-voting.
+This is telegram bot that counts votes. It accepts votes only from certain members and prohibits re-voting. All statistic write in file `vote status.txt`.
 
 # Installing
 1. First of all you need JDK. [Download it you can here](https://www.oracle.com/technetwork/java/javase/downloads/index.html).
@@ -16,7 +16,6 @@ This is telegram bot that counts votes. It accepts votes only from certain membe
 
 # TODO
 1. Make normal settings.
-2. Make live result in text file.
-3. Make ability to add names to players.
-4. Make voting by stickers.
-5. Add live voting on website.
+2. Make ability to add names to players.
+3. Make voting by stickers.
+4. Add live voting on website.

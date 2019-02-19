@@ -13,7 +13,7 @@ import java.util.*;
 public class TelegramBot extends TelegramLongPollingBot {
     static List<Integer> players = new ArrayList<>();
     static Map<String, Boolean> phone = new HashMap<>(); //голосовал?
-    static String BotToken, BotUsername, startMsg, voteMsg, alreadyVotedMsg, nRegisterMsg, wrongFormatMsg, wrongNumberMsg;
+    static String BotToken, BotUsername, startMsg, voteMsg, alreadyVotedMsg, nRegisterMsg, wrongFormatMsg, wrongNumberMsg, statusMsg;
     static boolean doLogs;
     static Writer output;
 
@@ -82,6 +82,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         nRegisterMsg = properties.getProperty("NotRegisteredMessage", "You are not registered to vote!");
         wrongFormatMsg = properties.getProperty("WrongFormatMessage", "You have entered the wrong format.");
         wrongNumberMsg = properties.getProperty("WrongNumberMessage", "You have entered the wrong number.");
+        statusMsg = properties.getProperty("StatusMessage", "Votes for player %1$d: %2$d");
     }
 
     public static void log(String s) {
@@ -121,7 +122,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (phone.get(message.getFrom().getUserName()).equals(false)) {
                     players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
                     log(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
-                    getStatus();
+                    updateStatus();
                     sndMsg(message, String.format(voteMsg, message.getText())); // "You voted for the player " + message.getText()
                     phone.replace(message.getFrom().getUserName(), false, true);
                 } else {
@@ -141,12 +142,25 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    public void getStatus() {
-        System.out.println();
-        for (int i = 0; i < players.size(); i++) {
-            System.out.println(String.format("Player №%s, votes %s", i, players.get(i)));
+    public void updateStatus() {
+//        System.out.println();
+//        for (int i = 0; i < players.size(); i++) {
+//            System.out.println(String.format("Player №%s, votes %s", i, players.get(i)));
+//        }
+//        System.out.println();
+
+        try {
+            Writer writer = new BufferedWriter(new FileWriter("vote status.txt", false));
+            for (int i = 0; i < players.size(); i++) {
+                writer.write(String.format(statusMsg, i, players.get(i)) + "\n");
+                writer.flush();
+            }
+            writer.close();
+        } catch (IOException e) {
+            log("IO Exception");
         }
-        System.out.println();
+
+        log("Status updated");
     }
 
     private void sndMsg(Message message, String s) {
