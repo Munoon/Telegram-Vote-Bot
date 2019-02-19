@@ -11,21 +11,23 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TelegramBot extends TelegramLongPollingBot {
-    static List<Integer> players = new ArrayList<>();
-    static Map<String, Boolean> phone = new HashMap<>(); //голосовал?
-    static String BotToken, BotUsername, startMsg, voteMsg, alreadyVotedMsg, nRegisterMsg, wrongFormatMsg, wrongNumberMsg, statusMsg;
+//    static List<Integer> players = new ArrayList<>();
+    static Map<Integer, String> playerName = new HashMap<>(); // ID / Name
+    static Map<Integer, Integer> playerVotes = new HashMap<>(); // ID / Votes
+    static Map<String, Integer> phone = new HashMap<>(); // Voter Name / ID for player voted
+    static String BotToken, BotUsername, startMsg, voteMsg, alreadyVotedMsg, nRegisterMsg, wrongFormatMsg, wrongNumberMsg, statusMsg, revoteMsg;
     static boolean doLogs;
     static Writer output;
 
     public static void main(String[] args) {
         // TODO ADD IT ALL IN SETTINGS
         //ADD YOUR PLAYERS HERE
-        players.add(0); //player 0
-        players.add(0); //player 1
-        players.add(0); //player 2
+        playerName.put(1, "Munoon");
+        playerName.put(2, "LeoLight");
+        playerName.put(3, "IllBoss");
 
         //ADD YOUR VOTERS HERE
-        phone.put("munoon", false);
+        phone.put("munoon", 0);
 
         settings();
         ApiContextInitializer.init();
@@ -83,6 +85,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         wrongFormatMsg = properties.getProperty("WrongFormatMessage", "You have entered the wrong format.");
         wrongNumberMsg = properties.getProperty("WrongNumberMessage", "You have entered the wrong number.");
         statusMsg = properties.getProperty("StatusMessage", "Votes for player %1$d: %2$d");
+        revoteMsg = properties.getProperty("ReVoteMessage", "You have revoted for the player %s");
+
+        for (int i = 1; i < playerName.size() + 1; i++) {
+            playerVotes.put(i, 0);
+        }
     }
 
     public static void log(String s) {
@@ -119,15 +126,25 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void newVote(Message message) {
         try {
             if (phone.containsKey(message.getFrom().getUserName())) {     // message.getText().contains("1") &&
-                if (phone.get(message.getFrom().getUserName()).equals(false)) {
-                    players.set(Integer.parseInt(message.getText()) - 1, players.get(Integer.parseInt(message.getText()) - 1) + 1);
-                    log(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
-                    updateStatus();
-                    sndMsg(message, String.format(voteMsg, message.getText())); // "You voted for the player " + message.getText()
-                    phone.replace(message.getFrom().getUserName(), false, true);
-                } else {
-                    log(String.format("User %s trying to vote twice!", message.getFrom().getUserName()));
-                    sndMsg(message, alreadyVotedMsg); // "You have already voted!"
+                if (!(Integer.parseInt(message.getText()) > playerName.size())) {
+                    if (phone.get(message.getFrom().getUserName()) == 0) {
+                        addVote(Integer.parseInt(message.getText()));
+                        updateStatus();
+                        sndMsg(message, String.format(voteMsg, getNameById(Integer.parseInt(message.getText())))); // "You voted for the player " + message.getText()
+                        phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
+                        log(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
+                    } else if (phone.get(message.getFrom().getUserName()) != 0) {
+                        removeVote(phone.get(message.getFrom().getUserName()));
+                        addVote(Integer.parseInt(message.getText()));
+                        updateStatus();
+                        sndMsg(message, String.format(revoteMsg, getNameById(Integer.parseInt(message.getText()))));
+                        phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
+                        log(String.format("A voice was given to the player %s from the user %s (THAT WAS A REVOTE)", message.getText(), message.getFrom().getUserName()));
+                    }
+                }
+                else {
+                    log(String.format("%s enter wrong number", message.getFrom().getUserName()));
+                    sndMsg(message, wrongNumberMsg);
                 }
             } else {
                 log(String.format("Unknown user found: %s", message.getFrom().getUserName()));
@@ -142,6 +159,22 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    public void addVote(int id) {
+        playerVotes.put(id, playerVotes.get(id) + 1);
+    }
+
+    public void removeVote(int id) {
+        playerVotes.put(id, playerVotes.get(id) - 1);
+    }
+
+    public Integer getVoteById(int id) {
+        return playerVotes.get(id);
+    }
+
+    public String getNameById(int id) {
+        return playerName.get(id);
+    }
+
     public void updateStatus() {
 //        System.out.println();
 //        for (int i = 0; i < players.size(); i++) {
@@ -151,8 +184,8 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         try {
             Writer writer = new BufferedWriter(new FileWriter("vote status.txt", false));
-            for (int i = 0; i < players.size(); i++) {
-                writer.write(String.format(statusMsg, i, players.get(i)) + "\n");
+            for (int i = 1; i < playerName.size() + 1; i++) {
+                writer.write(String.format(statusMsg + "\n", getNameById(i), i, getVoteById(i)));
                 writer.flush();
             }
             writer.close();
