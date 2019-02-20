@@ -48,6 +48,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             else {
                 newVote(message);
             }
+        } else if (message != null && !message.hasText()) {
+            if (message.getFrom().getLanguageCode().equals("ru")) {
+                sndMsg(message, ruWrongFormatMsg);
+            } else {
+                sndMsg(message, wrongFormatMsg);
+            }
         }
     }
 
