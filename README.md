@@ -10,12 +10,8 @@ This is telegram bot that counts votes. It accepts votes only from certain membe
     * Follow the instructions to get token.
     * Open `config.properties` and set the parameters according to the instructions.
     * There you need to type your token and bot name in the appropriate fields.
-    * In `src/TelegramBot.java` class `main` add players for which will vote users by command `players.add(0);`.
-    * Add users who can vote by command `phone.put("username", false);` (you should type them usernames from small letter).
 4. Profit.
 
 # TODO
-1. Make normal settings.
-3. Make voting by stickers.
-4. Add support multi-languages.
-5. Add live voting on website.
+1. Make voting by stickers.
+2. Add live voting on website.
