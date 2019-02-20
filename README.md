@@ -13,5 +13,4 @@ This is telegram bot that counts votes. It accepts votes only from certain membe
 4. Profit.
 
 # TODO
-1. Make voting by stickers.
-2. Add live voting on website.
+1. Add live voting on website.
