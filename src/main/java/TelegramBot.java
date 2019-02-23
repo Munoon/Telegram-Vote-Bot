@@ -5,19 +5,18 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TelegramBot extends TelegramLongPollingBot {
     static Map<Integer, String> playerName = new HashMap<>(); // ID / Name
     static Map<Integer, Integer> playerVotes = new HashMap<>(); // ID / Votes
     static Map<String, Integer> phone = new HashMap<>(); // Voter Name / ID for player voted
+    static final Logger logger = Logger.getLogger(TelegramBot.class);
     static String BotToken, BotUsername, startMsg, voteMsg, nRegisterMsg, wrongFormatMsg, wrongNumberMsg, statusMsg, revoteMsg;
     static String ruVoteMsg, ruRevoteMsg, ruWrongNumberMsg, runRegisterMsg, ruWrongFormatMsg, ruStartMsg;
-    static boolean doLogs;
-    static Writer output;
 
     public static void main(String[] args) {
         settings();
@@ -26,10 +25,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             telegramBotsApi.registerBot(new TelegramBot());
         } catch (TelegramApiException e) {
-            log("ERROR TELEGRAM BOT TOKEN");
+            logger.error("ERROR TELEGRAM BOT TOKEN: " + e);
             System.exit(0);
         }
-        log("BOT WORKING");
+        logger.info("BOT WORKING");
     }
 
     @Override
@@ -64,9 +63,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             in = new FileInputStream("config.properties");
             properties.load(in);
         } catch (FileNotFoundException e) {
-            log("FILE NOT FOUND EXCEPTION");
+            logger.error("FILE NOT FOUND EXCEPTION: " + e);
         } catch (IOException e) {
-            log("IO EXCEPTION");
+            logger.error("IO EXCEPTION: " + e);
         }
 
         BotToken = properties.getProperty("BotToken");
@@ -90,15 +89,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         phone.put(users, 0);
 
-        if (properties.getProperty("DoLogs").equals("true")) {
-            doLogs = true;
-            setWriter();
-        } else if (properties.getProperty("DoLogs").equals("false")) doLogs = false;
-        else {
-            System.out.println("Unknown format in DoLogs settings.");
-            doLogs = false;
-        }
-
         startMsg = properties.getProperty("StartMessage", "Hi! I'm voting bot. Write the number of the member you want to vote for!");
         voteMsg = properties.getProperty("VoteMessage", "You voted for the player %s");
         nRegisterMsg = properties.getProperty("NotRegisteredMessage", "You are not registered to vote!");
@@ -119,37 +109,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    public static void log(String s) {
-        Date date = new Date();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("[dd.MM.yyyy][HH:mm:ss] ");
-
-        if (doLogs) {
-            try {
-                getOutput().write(simpleDateFormat.format(date) + s + "\n");
-                getOutput().flush();
-//                getOutput().close();
-            } catch (IOException e) {
-                log("IO EXCEPTION");
-            }
-        }
-
-        System.out.println(simpleDateFormat.format(date) + s);
-    }
-
-    public static void setWriter() {
-        Date date = new Date();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
-        try {
-            output = new BufferedWriter(new FileWriter("log/log-" + simpleDateFormat.format(date) + ".txt", true));
-        } catch (IOException e) {
-            log("IO EXCEPTION");
-        }
-    }
-
-    public static Writer getOutput() {
-        return output;
-    }
-
     public void newVote(Message message) {
         try {
             if (phone.containsKey(message.getFrom().getUserName())) {     // message.getText().contains("1") &&
@@ -159,29 +118,29 @@ public class TelegramBot extends TelegramLongPollingBot {
                         updateStatus();
                         sndMsg(message, String.format(voteMsg, getNameById(Integer.parseInt(message.getText())))); // "You voted for the player " + message.getText()
                         phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
-                        log(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
+                        logger.info(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
                     } else if (phone.get(message.getFrom().getUserName()) != 0) {
                         removeVote(phone.get(message.getFrom().getUserName()));
                         addVote(Integer.parseInt(message.getText()));
                         updateStatus();
                         sndMsg(message, String.format(revoteMsg, getNameById(Integer.parseInt(message.getText()))));
                         phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
-                        log(String.format("A voice was given to the player %s from the user %s (THAT WAS A REVOTE)", message.getText(), message.getFrom().getUserName()));
+                        logger.info(String.format("A voice was given to the player %s from the user %s (THAT WAS A REVOTE)", message.getText(), message.getFrom().getUserName()));
                     }
                 }
                 else {
-                    log(String.format("%s enter wrong number", message.getFrom().getUserName()));
+                    logger.info(String.format("%s enter wrong number", message.getFrom().getUserName()));
                     sndMsg(message, wrongNumberMsg);
                 }
             } else {
-                log(String.format("Unknown user found: %s", message.getFrom().getUserName()));
+                logger.info(String.format("Unknown user found: %s", message.getFrom().getUserName()));
                 sndMsg(message, nRegisterMsg);
             }
         } catch (NumberFormatException e) {
-            log(String.format("%s enter invalid format", message.getFrom().getUserName()));
+            logger.info(String.format("%s enter invalid format", message.getFrom().getUserName()));
             sndMsg(message, wrongFormatMsg);
         } catch (IndexOutOfBoundsException e) {
-            log(String.format("%s enter wrong number", message.getFrom().getUserName()));
+            logger.info(String.format("%s enter wrong number", message.getFrom().getUserName()));
             sndMsg(message, wrongNumberMsg);
         }
     }
@@ -195,29 +154,29 @@ public class TelegramBot extends TelegramLongPollingBot {
                         updateStatus();
                         sndMsg(message, String.format(ruVoteMsg, getNameById(Integer.parseInt(message.getText())))); // "You voted for the player " + message.getText()
                         phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
-                        log(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
+                        logger.info(String.format("A voice was given to the player %s from the user %s", message.getText(), message.getFrom().getUserName()));
                     } else if (phone.get(message.getFrom().getUserName()) != 0) {
                         removeVote(phone.get(message.getFrom().getUserName()));
                         addVote(Integer.parseInt(message.getText()));
                         updateStatus();
                         sndMsg(message, String.format(ruRevoteMsg, getNameById(Integer.parseInt(message.getText()))));
                         phone.put(message.getFrom().getUserName(), Integer.parseInt(message.getText()));
-                        log(String.format("A voice was given to the player %s from the user %s (THAT WAS A REVOTE)", message.getText(), message.getFrom().getUserName()));
+                        logger.info(String.format("A voice was given to the player %s from the user %s (THAT WAS A REVOTE)", message.getText(), message.getFrom().getUserName()));
                     }
                 }
                 else {
-                    log(String.format("%s enter wrong number", message.getFrom().getUserName()));
+                    logger.info(String.format("%s enter wrong number", message.getFrom().getUserName()));
                     sndMsg(message, ruWrongFormatMsg);
                 }
             } else {
-                log(String.format("Unknown user found: %s", message.getFrom().getUserName()));
+                logger.info(String.format("Unknown user found: %s", message.getFrom().getUserName()));
                 sndMsg(message, runRegisterMsg);
             }
         } catch (NumberFormatException e) {
-            log(String.format("%s enter invalid format", message.getFrom().getUserName()));
+            logger.info(String.format("%s enter invalid format", message.getFrom().getUserName()));
             sndMsg(message, ruWrongFormatMsg);
         } catch (IndexOutOfBoundsException e) {
-            log(String.format("%s enter wrong number", message.getFrom().getUserName()));
+            logger.info(String.format("%s enter wrong number", message.getFrom().getUserName()));
             sndMsg(message, ruWrongNumberMsg);
         }
     }
@@ -239,12 +198,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     public void updateStatus() {
-//        System.out.println();
-//        for (int i = 0; i < players.size(); i++) {
-//            System.out.println(String.format("Player №%s, votes %s", i, players.get(i)));
-//        }
-//        System.out.println();
-
         try {
             Writer writer = new BufferedWriter(new FileWriter("vote status.txt", false));
             for (int i = 1; i < playerName.size() + 1; i++) {
@@ -253,10 +206,10 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             writer.close();
         } catch (IOException e) {
-            log("IO Exception");
+            logger.error("IO EXCEPTION: " + e);
         }
 
-        log("Status updated");
+        logger.info("Status updated");
     }
 
     private void sndMsg(Message message, String s) {
@@ -268,9 +221,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            log("TELEGRAM API EXCEPTION");
+            logger.error("TELEGRAM API EXCEPTION: " + e);
         }
-//        System.out.println("Bot send message " + s + " to " + message.getFrom().getUserName());
     }
 
     @Override

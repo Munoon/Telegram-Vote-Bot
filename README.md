@@ -10,8 +10,8 @@ This is telegram bot that counts votes. It accepts votes only from certain membe
     * Open `config.properties` and set the parameters according to the instructions.
     * There you need to type your token and bot name in the appropriate fields.
 4. Launch 
-    * If you using windows launch assembly.bat and after program finished launch start.bat.
-    * If you using linux launch assembly.sh and after program finished launch start.sh.
+    * If you using windows launch `start.bat`.
+    * If you using linux launch `start.sh`.
 
 
 # TODO
