@@ -37,9 +37,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (message != null && message.hasText()) {
             if (message.getText().equals("/start") && message.getFrom().getLanguageCode().equals("ru")) {
                 sndMsg(message, ruStartMsg);
+                logger.info("Posted /start message");
             }
             else if (message.getText().equals("/start")) {
                 sndMsg(message, startMsg);
+                logger.info("Posted /start message");
             }
             else if (message.getFrom().getLanguageCode().equals("ru")) {
                 newVoteRu(message);
@@ -50,8 +52,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         } else if (message != null && !message.hasText()) {
             if (message.getFrom().getLanguageCode().equals("ru")) {
                 sndMsg(message, ruWrongFormatMsg);
+                logger.info("Posted RuWrongFormatMsg message");
             } else {
                 sndMsg(message, wrongFormatMsg);
+                logger.info("Posted WrongFormatMsg message");
             }
         }
     }
